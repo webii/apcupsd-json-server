@@ -1,10 +1,10 @@
 # apcupsd-json-server
 
-A simple JSON-spewing HTTP endpoint for apcupsd
+A simple JSON-spewing HTTP endpoint for apcupsd. Supports python3.
 
 ## Setup
 
-Run `python2.7 apcupsd-json`, then open <http://localhost:8008>.
+Run `python apcupsd-json`, then open <http://localhost:8008>.
 
 ### Options
 
@@ -16,6 +16,23 @@ Run `python2.7 apcupsd-json`, then open <http://localhost:8008>.
 You can specify the ports to watch for `apcupsd` instances (e.g., if you have multiple UPSes) after the command, e.g. `apcupsd-json 3551 3552`.
 
 Ports given without a hostname are assumed to be local. You can also specify ports on another host, e.g. `apcupsd-json 192.168.0.1:3551 192.168.0.2:3551`.
+
+### Instalation as a service
+
+There is an exemplary service configuration, so apcupsd-json will start with the system.
+
+Copying service definition:
+
+```
+cp apcupsd-json.service /lib/systemd/system/apcupsd-json.service
+```
+
+Enabling and starting service:
+```
+sudo systemctl --system daemon-reload
+sudo systemctl enable apcupsd-json.service
+sudo systemctl start apcupsd-json.service
+```
 
 ## Usage
 
