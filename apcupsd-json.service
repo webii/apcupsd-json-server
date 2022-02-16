@@ -1,0 +1,17 @@
+[Unit]
+Description=apcupsd-json
+After=syslog.target network.target
+
+[Service]
+SuccessExitStatus=143
+
+User=pi
+Group=pi
+
+Type=simple
+
+ExecStart=/home/pi/apcupsd-json
+ExecStop=/bin/kill -15 $MAINPID
+
+[Install]
+WantedBy=multi-user.target

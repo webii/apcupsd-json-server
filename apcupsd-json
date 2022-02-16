@@ -7,8 +7,8 @@ Provides a JSON API to apcupsd.
 
 import json, os, socket
 from argparse import ArgumentParser
-from SimpleHTTPServer import SimpleHTTPRequestHandler
-from SocketServer import TCPServer
+from http.server import SimpleHTTPRequestHandler
+from socketserver import TCPServer
 from struct import pack
 
 argparser = ArgumentParser(prog="apcupsd-json-server", description="JSON proxy and aggregator for apcupsd")
@@ -22,9 +22,9 @@ def ups_read(ups):
   data = ""
   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   s.connect(ups)
-  s.send(pack("xb6s", 6, "status"))
+  s.send(pack("xb6s", 6, "status".encode('utf-8')))
   while True:
-    data += s.recv(256)
+    data += s.recv(256).decode('utf-8')
     if data.endswith("\n\x00\x00"): break
   s.close()
   return data
@@ -49,15 +49,15 @@ def fetch_ups_data():
     try:
       data = ups_read(sock)
     except socket.error as err:
-      print "caught exception from apcupsd: %s" % err
-      raise RuntimeError, "couldn't read data on port %s: %s" % (w, err)
+      print("caught exception from apcupsd: %s" % err)
+      raise RuntimeError("couldn't read data on port %s: %s" % (w, err))
 
     try:
       formatted = ups_format(data)
       upses.append(formatted)
     except (AttributeError, KeyError, ValueError) as err:
-      print "caught exception from format: %s" % err
-      raise RuntimeError, "couldn't format response from apcupsd: %s" % err
+      print("caught exception from format: %s" % err)
+      raise(RuntimeError, "couldn't format response from apcupsd: %s" % err)
 
   return {
     "status": u"\ud83d\udc4d",
@@ -68,7 +68,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
   def do_GET(self):
     response = None
     try:
-      if self.path != "/": raise ValueError, "not a valid endpoint"
+      if self.path != "/": raise ValueError("not a valid endpoint")
       response = fetch_ups_data()
       self.send_response(200)
     except (ValueError, RuntimeError) as err:
@@ -86,14 +86,14 @@ class RequestHandler(SimpleHTTPRequestHandler):
       if args.cors:
         self.send_header("Access-Control-Allow-Origin", args.cors)
       self.end_headers()
-      self.wfile.write(json.dumps(response))
+      self.wfile.write(json.dumps(response).encode('utf-8'))
 
 handler = RequestHandler
 httpd = TCPServer((args.listen, args.port), handler)
 
 try:
-  print "listening on %s:%s\nwatching upses running on port %s" % (args.listen, args.port, args.watch)
+  print("listening on %s:%s\nwatching upses running on port %s" % (args.listen, args.port, args.watch))
   httpd.serve_forever()
 finally:
-  print "cleaning up"
+  print("cleaning up")
   httpd.server_close()
